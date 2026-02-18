@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - BUCA Talent Check-in</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            max-width: 600px;
+            margin: 2rem auto;
+            padding: 1rem;
+            line-height: 1.5;
+        }
+
+        input,
+        button,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+
+        button {
+            cursor: pointer;
+            background: #008a6a;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+        }
+
+        .card {
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-top: 10px;
+        }
+
+        .hint {
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        #status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>⚙️ ตั้งค่าระบบเช็คชื่อ</h1>
+
+    <div class="card">
+        <label for="scriptUrl">Google Script URL (Web App)</label>
+        <span class="hint">วาง URL ของ Web App ที่นี่ (ขึ้นต้นด้วย https://script.google.com/...)</span>
+        <input type="text" id="scriptUrl" placeholder="https://script.google.com/macros/s/..." value="">
+        <button onclick="loadConfig()">โหลดการตั้งค่าปัจจุบัน</button>
+    </div>
+
+    <br>
+
+    <div id="configSection" class="card" style="opacity: 0.5; pointer-events: none;">
+        <h3>📍 พิกัดเป้าหมาย</h3>
+        <label for="lat">Latitude (ละติจูด)</label>
+        <input type="number" id="lat" step="any" placeholder="13.XXXXXX">
+
+        <label for="lng">Longitude (ลองจิจูด)</label>
+        <input type="number" id="lng" step="any" placeholder="100.XXXXXX">
+
+        <label for="radius">Radius (เมตร)</label>
+        <input type="number" id="radius" value="50">
+
+        <h3>💬 ข้อความสถานะ</h3>
+        <label for="openStatus">เปิดระบบเช็คชื่อ?</label>
+        <select id="openStatus">
+            <option value="true">✅ เปิดใช้งาน (Open)</option>
+            <option value="false">⛔ ปิดระบบ (Closed)</option>
+        </select>
+
+        <br><br>
+        <button onclick="saveConfig()" id="saveBtn">บันทึกการตั้งค่า</button>
+    </div>
+
+    <div id="status"></div>
+
+    <script>
+        // Try to load saved URL from local storage
+        document.getElementById('scriptUrl').value = localStorage.getItem('buca_script_url') || '';
+
+        function setStatus(msg, type) {
+            const el = document.getElementById('status');
+            el.textContent = msg;
+            el.className = type;
+        }
+
+        async function loadConfig() {
+            const url = document.getElementById('scriptUrl').value.trim();
+            if (!url) return setStatus('กรุณาใส่ Google Script URL', 'error');
+
+            localStorage.setItem('buca_script_url', url);
+            setStatus('กำลังโหลด...', '');
+
+            try {
+                // Determine connector char
+                const connector = url.includes('?') ? '&' : '?';
+                const res = await fetch(`${url}${connector}action=getConfig`);
+                const data = await res.json();
+
+                if (data.error) throw new Error(data.error);
+
+                document.getElementById('lat').value = data.targetLat || '';
+                document.getElementById('lng').value = data.targetLng || '';
+                document.getElementById('radius').value = data.radius || 50;
+                document.getElementById('openStatus').value = data.isOpen ? "true" : "false";
+
+                // Enable form
+                const section = document.getElementById('configSection');
+                section.style.opacity = '1';
+                section.style.pointerEvents = 'auto';
+                setStatus('โหลดข้อมูลสำเร็จ ✅', 'success');
+            } catch (err) {
+                console.error(err);
+                setStatus('โหลดล้มเหลว: ' + err.message, 'error');
+            }
+        }
+
+        async function saveConfig() {
+            const url = document.getElementById('scriptUrl').value.trim();
+            const saveBtn = document.getElementById('saveBtn');
+            saveBtn.disabled = true;
+            setStatus('กำลังบันทึก...', '');
+
+            const payload = {
+                action: 'setConfig',
+                targetLat: document.getElementById('lat').value,
+                targetLng: document.getElementById('lng').value,
+                radius: document.getElementById('radius').value,
+                isOpen: document.getElementById('openStatus').value === "true"
+            };
+
+            try {
+                // Using no-cors might prevent reading response, but let's try standard POST first
+                // If standard POST fails due to CORS, we might need a different approach or rely on GET for simple updates (less secure but works for GAS sometimes if JSONP)
+                // Actually, text/plain POST usually works with GAS `doPost`.
+
+                const res = await fetch(url, {
+                    method: 'POST',
+                    mode: 'no-cors', // standard for GAS web apps usually
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                // Since mode is no-cors, we can't read response. We assume success if no network error.
+                setStatus('บันทึกคำสั่งส่งไปแล้ว (ตรวจสอบที่หน้าเช็คชื่อ) ✅', 'success');
+            } catch (err) {
+                setStatus('บันทึกไม่สำเร็จ: ' + err.message, 'error');
+            } finally {
+                saveBtn.disabled = false;
+            }
+        }
+    </script>
+</body>
+
+</html>
