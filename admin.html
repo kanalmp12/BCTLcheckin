@@ -111,9 +111,14 @@
 
     <div id="status"></div>
 
+    <script src="config.js"></script>
     <script>
-        // Try to load saved URL from local storage
-        document.getElementById('scriptUrl').value = localStorage.getItem('buca_script_url') || '';
+        // Try to load saved URL from config.js first, then local storage
+        if (typeof GOOGLE_SCRIPT_URL !== 'undefined' && GOOGLE_SCRIPT_URL) {
+            document.getElementById('scriptUrl').value = GOOGLE_SCRIPT_URL;
+        } else {
+            document.getElementById('scriptUrl').value = localStorage.getItem('buca_script_url') || '';
+        }
 
         function setStatus(msg, type) {
             const el = document.getElementById('status');
