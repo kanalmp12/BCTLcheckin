@@ -54,8 +54,9 @@
             display: flex;
             justify-content: center;
             min-height: 100vh;
-            padding: 24px;
+            padding: 0;
             box-sizing: border-box;
+            overflow: hidden;
         }
 
         .container {
@@ -64,6 +65,7 @@
             display: flex;
             flex-direction: column;
             gap: 24px;
+            padding: 24px;
         }
 
         h1 {
@@ -245,7 +247,7 @@
 
 <body>
     <div id="loginBg"
-        style="display: none; align-items: center; justify-content: center; min-height: 100vh; background-color: #f0f4f8; padding: 20px; box-sizing: border-box;">
+        style="display: none; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; box-sizing: border-box;">
         <div class="card"
             style="width: 100%; max-width: 1040px; display: flex; flex-direction: row; align-items: center; padding: 0; overflow: hidden; min-height: 400px; flex-wrap: wrap;">
 
@@ -426,6 +428,7 @@
                     setStatus(`ยินดีต้อนรับ, ${data.user.name}`, "success");
                     document.getElementById('loginBg').style.display = 'none';
                     document.getElementById('adminContainer').style.display = 'flex';
+                    document.body.style.overflow = 'auto'; // Enable scrolling for admin content
 
                     // Display User Profile
                     document.getElementById('userName').innerText = data.user.name;
