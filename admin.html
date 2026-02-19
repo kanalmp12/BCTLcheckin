@@ -244,30 +244,43 @@
 </head>
 
 <body>
-    <div id="loginSection" class="container"
-        style="display: none; align-items: center; justify-content: center; min-height: 100vh; margin-top: 0;">
-        <div class="card" style="width: 100%; max-width: 400px; text-align: center; padding: 40px 24px;">
-            <span class="material-symbols-outlined"
-                style="font-size: 64px; color: var(--md-sys-color-primary); margin-bottom: 24px;">admin_panel_settings</span>
-            <h2 style="font: var(--md-sys-typescale-headline); font-size: 24px; margin: 0 0 16px 0;">Admin Access
-                Required</h2>
-            <p
-                style="font: var(--md-sys-typescale-body); color: var(--md-sys-color-on-surface-variant); margin: 0 0 32px 0;">
-                กรุณาเข้าสู่ระบบด้วย LINE เพื่อยืนยันสิทธิ์</p>
+    <div id="loginBg"
+        style="display: none; align-items: center; justify-content: center; min-height: 100vh; background-color: #f0f4f8; padding: 20px; box-sizing: border-box;">
+        <div class="card"
+            style="width: 100%; max-width: 1040px; display: flex; flex-direction: row; align-items: center; padding: 0; overflow: hidden; min-height: 400px; flex-wrap: wrap;">
 
-            <button onclick="liff.login()"
-                style="background-color: #06C755; color: white; margin-bottom: 12px; width: 100%; justify-content: center;">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/LINE_logo.svg" alt="LINE"
-                    style="width: 20px; height: 20px;">
-                Log in with LINE
-            </button>
-            <a href="index.html" style="text-decoration: none; display: block; width: 100%;">
-                <button type="button"
-                    style="background-color: transparent; color: var(--md-sys-color-primary); border: 1px solid var(--md-sys-color-outline); width: 100%; justify-content: center;">
-                    <span class="material-symbols-outlined" style="font-size: 20px;">arrow_back</span>
-                    กลับไปที่ BUCA Talent Check-In
-                </button>
-            </a>
+            <!-- Left Side: Content -->
+            <div style="flex: 1; padding: 48px; min-width: 280px; text-align: left;">
+                <span class="material-symbols-outlined"
+                    style="font-size: 48px; color: var(--md-sys-color-primary); margin-bottom: 24px;">admin_panel_settings</span>
+                <h1 style="font: var(--md-sys-typescale-headline); font-size: 36px; margin: 0 0 16px 0;">Sign in</h1>
+                <p
+                    style="font: var(--md-sys-typescale-body); font-size: 16px; color: var(--md-sys-color-on-surface); margin: 0;">
+                    to continue to Admin Panel</p>
+            </div>
+
+            <!-- Right Side: Actions -->
+            <div
+                style="flex: 1; padding: 48px; min-width: 280px; display: flex; flex-direction: column; justify-content: center; gap: 40px;">
+
+                <div style="width: 100%;">
+                    <button onclick="liff.login()"
+                        style="background-color: #06C755; color: white; width: 100%; justify-content: center; margin-bottom: 16px;">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/LINE_logo.svg" alt="LINE"
+                            style="width: 20px; height: 20px;">
+                        Log in with LINE
+                    </button>
+
+                    <a href="index.html" style="text-decoration: none; display: block; width: 100%;">
+                        <button type="button"
+                            style="background-color: transparent; color: var(--md-sys-color-primary); border: 1px solid var(--md-sys-color-outline); width: 100%; justify-content: center;">
+                            <span class="material-symbols-outlined" style="font-size: 20px;">arrow_back</span>
+                            Back to Check-In system
+                        </button>
+                    </a>
+                </div>
+
+            </div>
         </div>
     </div>
 
@@ -376,7 +389,7 @@
             try {
                 await liff.init({ liffId: LIFF_ID });
                 if (!liff.isLoggedIn()) {
-                    document.getElementById('loginSection').style.display = 'flex';
+                    document.getElementById('loginBg').style.display = 'flex';
                 } else {
                     handleLoggedIn();
                 }
@@ -411,7 +424,7 @@
 
                 if (data.authorized) {
                     setStatus(`ยินดีต้อนรับ, ${data.user.name}`, "success");
-                    document.getElementById('loginSection').style.display = 'none';
+                    document.getElementById('loginBg').style.display = 'none';
                     document.getElementById('adminContainer').style.display = 'flex';
 
                     // Display User Profile
