@@ -333,15 +333,23 @@
                         style="font-size: 24px; vertical-align: middle; margin-right: 8px;">my_location</span>
                     พิกัดเป้าหมาย
                 </h3>
-                <a href="https://www.icloud.com/shortcuts/9086840c10c84bbba9d6ef7e302d60d1" target="_blank"
-                    rel="noopener noreferrer" style="text-decoration: none;">
-                    <button type="button"
-                        style="width: auto; padding: 8px 16px; font-size: 14px; margin: 0; background: url('Images/Shortcuts%20Bg.jpg') center/cover no-repeat; color: white; border: none;">
-                        <img src="Images/Shortcuts%20Icon.png" alt="Shortcuts"
-                            style="width: 20px; height: 20px; object-fit: contain; margin-right: 4px;">
-                        Add Shortcut
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" onclick="pasteCoords()"
+                        style="width: auto; padding: 8px 16px; font-size: 14px; margin: 0; background-color: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); border: none;">
+                        <span class="material-symbols-outlined"
+                            style="font-size: 20px; margin-right: 4px;">content_paste</span>
+                        Paste
                     </button>
-                </a>
+                    <a href="https://www.icloud.com/shortcuts/9086840c10c84bbba9d6ef7e302d60d1" target="_blank"
+                        rel="noopener noreferrer" style="text-decoration: none;">
+                        <button type="button"
+                            style="width: auto; padding: 8px 16px; font-size: 14px; margin: 0; background: url('Images/Shortcuts%20Bg.jpg') center/cover no-repeat; color: white; border: none;">
+                            <img src="Images/Shortcuts%20Icon.png" alt="Shortcuts"
+                                style="width: 20px; height: 20px; object-fit: contain; margin-right: 4px;">
+                            Add Shortcut
+                        </button>
+                    </a>
+                </div>
             </div>
 
             <div class="form-group">
@@ -555,6 +563,51 @@
                 menu.style.display = 'none';
             }
         });
+
+        async function pasteCoords() {
+            try {
+                const text = await navigator.clipboard.readText();
+                if (!text) {
+                    setStatus('Clipboard is empty', 'error');
+                    return;
+                }
+
+                // Regex to find decimal coordinates
+                // Matches "lat, lng" or "lat lng" or "lat,lng" 
+                // e.g., "13.7563, 100.5018" or "13.7563 100.5018"
+                // It looks for two numbers (possibly floating point) separated by comma and/or space.
+                const coordRegex = /(-?\d+\.\d+)[,\s]+(-?\d+\.\d+)/;
+                const match = text.match(coordRegex);
+
+                if (match) {
+                    const lat = match[1];
+                    const lng = match[2];
+
+                    document.getElementById('lat').value = lat;
+                    document.getElementById('lng').value = lng;
+                    setStatus(`Pasted: ${lat}, ${lng}`, 'success');
+                } else {
+                    // Try parsing Google Maps URL if pasted
+                    // e.g. https://www.google.com/maps/place/.../@13.7563,100.5018,17z/...
+                    const mapUrlRegex = /@(-?\d+\.\d+),(-?\d+\.\d+)/;
+                    const urlMatch = text.match(mapUrlRegex);
+
+                    if (urlMatch) {
+                        const lat = urlMatch[1];
+                        const lng = urlMatch[2];
+                        document.getElementById('lat').value = lat;
+                        document.getElementById('lng').value = lng;
+                        setStatus(`Extracted from URL: ${lat}, ${lng}`, 'success');
+                    } else {
+                        setStatus('Cannot parse coordinates from clipboard', 'error');
+                    }
+                }
+
+            } catch (err) {
+                console.error('Failed to read clipboard', err);
+                setStatus('Failed to read clipboard: ' + err.message, 'error');
+            }
+        }
     </script>
 </body>
 
