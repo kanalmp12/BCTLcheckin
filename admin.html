@@ -259,11 +259,26 @@
         <div
             style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 16px;">
             <h1 style="margin: 0;"><span class="icon">settings</span> ตั้งค่า</h1>
-            <div
-                style="display: flex; align-items: center; gap: 10px; background: var(--md-sys-color-surface-container); padding: 6px 16px 6px 6px; border-radius: 30px; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
-                <img id="userPicture" src="" alt="Profile"
-                    style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #ddd;">
-                <span id="userName" style="font-size: 14px; font-weight: 500; white-space: nowrap;">Loading...</span>
+            <div style="position: relative;">
+                <div id="profileBtn" onclick="toggleMenu()"
+                    style="display: flex; align-items: center; gap: 10px; background: var(--md-sys-color-surface-container); padding: 6px 16px 6px 6px; border-radius: 30px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); cursor: pointer; user-select: none;">
+                    <img id="userPicture" src="" alt="Profile"
+                        style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #ddd;">
+                    <span id="userName"
+                        style="font-size: 14px; font-weight: 500; white-space: nowrap;">Loading...</span>
+                    <span class="material-symbols-outlined" style="font-size: 20px;">expand_more</span>
+                </div>
+
+                <!-- Dropdown Menu -->
+                <div id="profileMenu" class="card"
+                    style="display: none; position: absolute; top: 110%; right: 0; padding: 8px 0; min-width: 150px; z-index: 100; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+                    <div onclick="logout()"
+                        style="padding: 12px 16px; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: background 0.2s;">
+                        <span class="material-symbols-outlined"
+                            style="font-size: 20px; color: var(--md-sys-color-error);">logout</span>
+                        <span style="color: var(--md-sys-color-on-surface); font-size: 14px;">ออกจากระบบ</span>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -472,6 +487,29 @@
                 saveBtn.disabled = false;
             }
         }
+
+        function toggleMenu() {
+            const menu = document.getElementById('profileMenu');
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function logout() {
+            if (liff.isLoggedIn()) {
+                liff.logout();
+                window.location.href = "index.html";
+            } else {
+                window.location.href = "index.html";
+            }
+        }
+
+        // Close menu when clicking outside
+        document.addEventListener('click', function (event) {
+            const menu = document.getElementById('profileMenu');
+            const btn = document.getElementById('profileBtn');
+            if (!btn.contains(event.target) && !menu.contains(event.target)) {
+                menu.style.display = 'none';
+            }
+        });
     </script>
 </body>
 
