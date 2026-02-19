@@ -348,7 +348,7 @@
 
                 const res = await fetch(url, {
                     method: 'POST',
-                    mode: 'text/plain', // Use text/plain to avoid CORS preflight issues with GAS
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
                     body: JSON.stringify(payload)
                 });
 
