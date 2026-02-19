@@ -244,16 +244,26 @@
 </head>
 
 <body>
-    <div id="loginSection" class="container" style="display: none; text-align: center; margin-top: 100px;">
-        <div class="card">
-            <h2>🔐 Admin Access Required</h2>
-            <p>กรุณาเข้าสู่ระบบด้วย LINE เพื่อยืนยันสิทธิ์</p>
-            <button onclick="liff.login()" style="background-color: #06C755; color: white; margin-bottom: 12px;">
+    <div id="loginSection" class="container"
+        style="display: none; align-items: center; justify-content: center; min-height: 100vh; margin-top: 0;">
+        <div class="card" style="width: 100%; max-width: 400px; text-align: center; padding: 40px 24px;">
+            <span class="material-symbols-outlined"
+                style="font-size: 64px; color: var(--md-sys-color-primary); margin-bottom: 24px;">admin_panel_settings</span>
+            <h2 style="font: var(--md-sys-typescale-headline); font-size: 24px; margin: 0 0 16px 0;">Admin Access
+                Required</h2>
+            <p
+                style="font: var(--md-sys-typescale-body); color: var(--md-sys-color-on-surface-variant); margin: 0 0 32px 0;">
+                กรุณาเข้าสู่ระบบด้วย LINE เพื่อยืนยันสิทธิ์</p>
+
+            <button onclick="liff.login()"
+                style="background-color: #06C755; color: white; margin-bottom: 12px; width: 100%; justify-content: center;">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/LINE_logo.svg" alt="LINE"
+                    style="width: 20px; height: 20px;">
                 Log in with LINE
             </button>
             <a href="index.html" style="text-decoration: none; display: block; width: 100%;">
                 <button type="button"
-                    style="background-color: var(--md-sys-color-surface-container); color: var(--md-sys-color-on-surface); border: 1px solid var(--md-sys-color-outline);">
+                    style="background-color: transparent; color: var(--md-sys-color-primary); border: 1px solid var(--md-sys-color-outline); width: 100%; justify-content: center;">
                     <span class="material-symbols-outlined" style="font-size: 20px;">arrow_back</span>
                     กลับไปที่ BUCA Talent Check-In
                 </button>
