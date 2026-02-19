@@ -248,9 +248,16 @@
         <div class="card">
             <h2>🔐 Admin Access Required</h2>
             <p>กรุณาเข้าสู่ระบบด้วย LINE เพื่อยืนยันสิทธิ์</p>
-            <button onclick="liff.login()" style="background-color: #06C755; color: white;">
+            <button onclick="liff.login()" style="background-color: #06C755; color: white; margin-bottom: 12px;">
                 Log in with LINE
             </button>
+            <a href="index.html" style="text-decoration: none; display: block; width: 100%;">
+                <button type="button"
+                    style="background-color: var(--md-sys-color-surface-container); color: var(--md-sys-color-on-surface); border: 1px solid var(--md-sys-color-outline);">
+                    <span class="material-symbols-outlined" style="font-size: 20px;">arrow_back</span>
+                    กลับไปที่ BUCA Talent Check-In
+                </button>
+            </a>
         </div>
     </div>
 
@@ -508,9 +515,9 @@
         function logout() {
             if (liff.isLoggedIn()) {
                 liff.logout();
-                window.location.href = "index.html";
+                window.location.reload();
             } else {
-                window.location.href = "index.html";
+                window.location.reload();
             }
         }
 
