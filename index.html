@@ -264,6 +264,13 @@
 
                     if (!a.targetLat || !a.targetLng) throw new Error("Incomplete Config: Missing Lat/Lng in Google Sheet");
 
+                    // Check Maintenance Mode
+                    const isOpen = String(a.isOpen).toLowerCase() === 'true';
+                    if (!isOpen) {
+                        window.location.href = "Maintenance.html";
+                        return;
+                    }
+
                     e.targetLat = parseFloat(a.targetLat), e.targetLng = parseFloat(a.targetLng), e.isLoaded = !0, console.log("Config loaded via Google Apps Script"), s()
                 } catch (e) {
                     console.error("Config Error:", e), t.status.textContent = `โหลดค่าไม่สำเร็จ: ${e.message}`
