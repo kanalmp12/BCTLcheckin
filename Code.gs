@@ -7,8 +7,7 @@
  * 3. Copy the URL to use in admin.html and index.html.
  */
 
-const SHEET_ID = ""; // Optional: Leave empty to use the active spreadsheet if bound.
-// If script is standalone, put the Spreadsheet ID here.
+const SHEET_ID = "1305nzc11M07RBkgisCjvBmrlPEg6tnaWzedsXkUBQAw"; // User provided Sheet ID
 
 function doGet(e) {
   const params = e.parameter;
@@ -104,23 +103,25 @@ function setConfig(data) {
 
 function handleCheckIn(data) {
   const ss = getSpreadsheet();
-  const sheet = ss.getSheetByName("Checkins") || ss.insertSheet("Checkins");
+  // Changed to 'BCTLcheckin' based on user request/screenshot
+  const sheet = ss.getSheetByName("BCTLcheckin"); 
   
-  // Headers if empty
-  if (sheet.getLastRow() === 0) {
-    sheet.appendRow(["Timestamp", "Name", "Department", "Cohort", "Lat", "Lng", "Distance", "Status", "UA"]);
+  if (!sheet) {
+      return errorResponse("Make sure the sheet name is 'BCTLcheckin'");
   }
 
+  // Column matching based on screenshot:
+  // A: Timestamp, B: Name, C: Department, D: Cohort, E: Lat, F: Lng, G: Accuracy, H: Distance(m), I: UA
   sheet.appendRow([
-    new Date(),
-    data.name,
-    data.department,
-    data.cohort,
-    data.lat,
-    data.lng,
-    data.distance_m,
-    "Checked In",
-    data.ua
+    new Date(),        // A
+    data.name,         // B
+    data.department,   // C
+    data.cohort,       // D
+    data.lat,          // E
+    data.lng,          // F
+    data.accuracy,     // G
+    data.distance_m,   // H
+    data.ua            // I
   ]);
 
   return ContentService.createTextOutput(JSON.stringify({ status: "success" }))

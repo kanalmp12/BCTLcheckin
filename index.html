@@ -197,10 +197,10 @@
 
 <body><a class="sr-only" href="#main">ข้ามไปเนื้อหา</a>
     <header role="banner" aria-label="หัวข้อหน้า">
-        <nav><strong>Check‑in</strong><span class="pill" aria-label="สถานะความพร้อม">เวอร์ชัน • Cloudflare Pages</span>
+        <nav><strong>Check‑in</strong><span class="pill" aria-label="สถานะความพร้อม">เวอร์ชัน • 011826</span>
         </nav>
         <h1>เช็คชื่อห้องประชุม BUCA Talent</h1>
-        <p class="lead">ระบบกำลังโหลดการตั้งค่าและตำแหน่ง...</p>
+        <p class="lead">กรุณาอนุญาตการเข้าถึงตำแหน่งอุปกรณ์ของคุณ</p>
     </header>
     <main id="main" role="main">
         <section class="card" aria-labelledby="form-title">
@@ -268,7 +268,7 @@
                 } catch (e) {
                     console.error("Config Error:", e), t.status.textContent = `โหลดค่าไม่สำเร็จ: ${e.message}`
                 }
-            }), document.addEventListener("input", o), document.addEventListener("change", o), t.form.addEventListener("submit", async a => { if (a.preventDefault(), t.submitBtn.disabled) return; const s = document.getElementById("website"); if (s && s.value) return void (t.status.textContent = "บล็อกบอท"); t.submitBtn.disabled = !0, t.status.textContent = "กำลังบันทึก..."; const r = { timestamp: (new Date).toISOString(), name: t.name.value.trim(), department: t.dept.value, cohort: t.cohort.value, lat: n.lat, lng: n.lng, accuracy: n.acc, distance_m: Math.round(n.dist || 0), ua: navigator.userAgent }; try { await fetch(e.scriptUrl, { method: "POST", mode: "no-cors", body: JSON.stringify(r) }), t.status.textContent = "เช็คชื่อเรียบร้อย ✔ กำลังรีเฟรช...", t.form.reset(), n.ok = !1, t.distOutput.value = "–", o(), setTimeout(function () { window.location.reload() }, 1200) } catch (e) { t.status.textContent = "เกิดข้อผิดพลาดของเครือข่าย", t.submitBtn.disabled = !1 } })
+            }), document.addEventListener("input", o), document.addEventListener("change", o), t.form.addEventListener("submit", async a => { if (a.preventDefault(), t.submitBtn.disabled) return; const s = document.getElementById("website"); if (s && s.value) return void (t.status.textContent = "บล็อกบอท"); t.submitBtn.disabled = !0, t.status.textContent = "กำลังบันทึก..."; const r = { timestamp: (new Date).toISOString(), name: t.name.value.trim(), department: t.dept.value, cohort: t.cohort.value, lat: n.lat, lng: n.lng, accuracy: n.acc, distance_m: Math.round(n.dist || 0), ua: navigator.userAgent }; try { await fetch(e.scriptUrl, { method: "POST", mode: "no-cors", body: JSON.stringify(r) }), t.status.textContent = "เช็คชื่อเรียบร้อย ✔ พร้อมสำหรับคนถัดไป", t.form.reset(), t.distOutput.value = Math.round(n.dist) + " m", o() } catch (e) { t.status.textContent = "เกิดข้อผิดพลาดของเครือข่าย", t.submitBtn.disabled = !1 } })
         }()
     </script>
 </body>
