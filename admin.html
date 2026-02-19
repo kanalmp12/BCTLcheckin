@@ -376,7 +376,7 @@
             try {
                 await liff.init({ liffId: LIFF_ID });
                 if (!liff.isLoggedIn()) {
-                    document.getElementById('loginSection').style.display = 'block';
+                    document.getElementById('loginSection').style.display = 'flex';
                 } else {
                     handleLoggedIn();
                 }
