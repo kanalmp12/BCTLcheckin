@@ -22,17 +22,9 @@ function doGet(e) {
 }
 
 function doPost(e) {
-  logToDebug("doPost triggered");
   try {
-    if (!e.postData || !e.postData.contents) {
-      logToDebug("No postData");
-      return errorResponse("No postData");
-    }
-    logToDebug("Payload: " + e.postData.contents);
-    
     const data = JSON.parse(e.postData.contents);
     const action = data.action;
-    logToDebug("Action: " + action);
 
     if (action === "setConfig") {
       return setConfig(data);
@@ -43,7 +35,6 @@ function doPost(e) {
       return handleCheckIn(data);
     }
   } catch (err) {
-    logToDebug("Error: " + err.toString());
     return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() }))
       .setMimeType(ContentService.MimeType.JSON);
   }
@@ -154,18 +145,12 @@ function errorResponse(msg) {
 }
 
 function verifyAdmin(data) {
-  logToDebug("verifyAdmin started");
   const adminSheet = getOrInitAdminSheet();
   const idToken = data.idToken;
   
-  if (!idToken) {
-    logToDebug("Missing ID Token");
-    return errorResponse("Missing ID Token");
-  }
+  if (!idToken) return errorResponse("Missing ID Token");
 
   try {
-    logToDebug("Verifying with LINE...");
-    
     // Extract Channel ID from LIFF ID (Channel ID is the first part before '-')
     const channelId = data.liffId.split('-')[0];
     
@@ -177,21 +162,17 @@ function verifyAdmin(data) {
 
     const options = {
       method: 'post',
-      payload: payload,
-      muteHttpExceptions: true // Added to see error response
+      payload: payload
     };
 
     const response = UrlFetchApp.fetch('https://api.line.me/oauth2/v2.1/verify', options);
-    const responseText = response.getContentText();
-    logToDebug("LINE Response: " + responseText);
     
-    const json = JSON.parse(responseText);
+    const json = JSON.parse(response.getContentText());
     if (json.error) return errorResponse(json.error_description);
 
     const userId = json.sub;
     const name = json.name;
     const picture = json.picture;
-    logToDebug("User Verified: " + name + " (" + userId + ")");
 
     // Check Whitelist
     const rows = adminSheet.getDataRange().getValues();
@@ -209,10 +190,8 @@ function verifyAdmin(data) {
     }
 
     if (!userFound) {
-      logToDebug("User not found, appending to sheet");
+      // Auto-register as unauthorized
       adminSheet.appendRow([userId, name, false, new Date(), picture]);
-    } else {
-        logToDebug("User found, authorized: " + isAuthorized);
     }
 
     return ContentService.createTextOutput(JSON.stringify({ 
@@ -221,7 +200,6 @@ function verifyAdmin(data) {
     })).setMimeType(ContentService.MimeType.JSON);
 
   } catch (e) {
-    logToDebug("verifyAdmin Exception: " + e.toString());
     return errorResponse("Verification Failed: " + e.message);
   }
 }
@@ -236,26 +214,4 @@ function getOrInitAdminSheet() {
   return sheet;
 }
 
-function getOrInitDebugSheet() {
-  const ss = getSpreadsheet();
-  let sheet = ss.getSheetByName("Debug");
-  if (!sheet) {
-    sheet = ss.insertSheet("Debug");
-    sheet.appendRow(["Timestamp", "Message"]);
-  }
-  return sheet;
-}
 
-
-function logToDebug(msg) {
-  try {
-    const sheet = getOrInitDebugSheet();
-    sheet.appendRow([new Date(), msg]);
-  } catch (e) {
-    // Fail silently if debug sheet fails
-  }
-}
-
-function testConnect() {
-   console.log(UrlFetchApp.fetch("https://google.com").getContentText());
-}
