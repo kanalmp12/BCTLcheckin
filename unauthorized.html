@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unauthorized Access - BUCA Talent Check-in</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <style>
+        :root {
+            /* MD3 Light Theme Tokens - Pink (Consistent with Admin) */
+            --md-sys-color-primary: #bc004b;
+            --md-sys-color-on-primary: #ffffff;
+            --md-sys-color-primary-container: #ffd9e2;
+            --md-sys-color-on-primary-container: #400015;
+            --md-sys-color-surface: #fbfdf9;
+            --md-sys-color-on-surface: #191c1b;
+            --md-sys-color-surface-container: #efF2ee;
+            --md-sys-color-outline: #707974;
+            --md-sys-color-error: #ba1a1a;
+            --md-sys-color-on-error: #ffffff;
+
+            --md-sys-typescale-headline: 400 32px/40px 'Roboto', sans-serif;
+            --md-sys-typescale-body: 400 16px/24px 'Roboto', sans-serif;
+            --md-sys-typescale-label: 500 14px/20px 'Roboto', sans-serif;
+
+            --radius-medium: 12px;
+            --radius-full: 999px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                /* MD3 Dark Theme Tokens - Pink (Consistent with Admin) */
+                --md-sys-color-primary: #ffb1c8;
+                --md-sys-color-on-primary: #650033;
+                --md-sys-color-primary-container: #8e004a;
+                --md-sys-color-on-primary-container: #ffd9e2;
+                --md-sys-color-surface: #191c1b;
+                --md-sys-color-on-surface: #e1e3e0;
+                --md-sys-color-surface-container: #1d201f;
+                --md-sys-color-outline: #89938d;
+                --md-sys-color-error: #ffb4ab;
+                --md-sys-color-on-error: #690005;
+            }
+        }
+
+        body {
+            font: var(--md-sys-typescale-body);
+            background-color: var(--md-sys-color-surface);
+            color: var(--md-sys-color-on-surface);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 24px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            align-items: center;
+        }
+
+        .icon {
+            font-family: 'Material Symbols Outlined';
+            font-size: 64px;
+            color: var(--md-sys-color-error);
+            margin-bottom: 16px;
+        }
+
+        h1 {
+            font: var(--md-sys-typescale-headline);
+            margin: 0;
+            color: var(--md-sys-color-on-surface);
+        }
+
+        p {
+            margin: 0;
+            color: var(--md-sys-color-outline);
+        }
+
+        /* Button Component */
+        button {
+            background-color: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary);
+            border: none;
+            border-radius: var(--radius-full);
+            padding: 12px 24px;
+            font: var(--md-sys-typescale-label);
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            transition: box-shadow 0.2s, opacity 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        button:hover {
+            box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.3), 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+            opacity: 0.9;
+        }
+
+        button:active {
+            opacity: 0.8;
+            box-shadow: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <span class="icon">lock</span>
+
+        <div>
+            <h1>คุณไม่มีสิทธิ์ในการเข้าถึงหน้านี้</h1>
+            <p style="font-size: 14px; margin-top: 8px;">You do not have permission to access this page</p>
+        </div>
+
+        <button onclick="logout()">
+            <span class="material-symbols-outlined" style="font-size: 20px;">logout</span>
+            ออกจากระบบ
+        </button>
+    </div>
+
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script src="config.js"></script>
+    <script>
+        // LIFF Logout Function
+        function logout() {
+            if (typeof liff !== 'undefined' && liff.isLoggedIn()) {
+                liff.logout();
+            }
+            window.location.href = "index.html";
+        }
+
+        async function initLiff() {
+            if (typeof LIFF_ID !== 'undefined' && LIFF_ID) {
+                try {
+                    await liff.init({ liffId: LIFF_ID });
+                } catch (e) {
+                    console.error("LIFF Init Error", e);
+                }
+            }
+        }
+
+        window.onload = initLiff;
+    </script>
+</body>
+
+</html>
