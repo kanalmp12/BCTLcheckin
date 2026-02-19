@@ -256,7 +256,16 @@
 
     <!-- Main Admin Container (Hidden by default) -->
     <div class="container" id="adminContainer" style="display: none;">
-        <h1><span class="icon">settings</span> ตั้งค่าระบบเช็คชื่อ</h1>
+        <div
+            style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h1 style="margin: 0;"><span class="icon">settings</span> ตั้งค่า</h1>
+            <div
+                style="display: flex; align-items: center; gap: 10px; background: var(--md-sys-color-surface-container); padding: 6px 16px 6px 6px; border-radius: 30px; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                <img id="userPicture" src="" alt="Profile"
+                    style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #ddd;">
+                <span id="userName" style="font-size: 14px; font-weight: 500; white-space: nowrap;">Loading...</span>
+            </div>
+        </div>
 
         <div class="card">
             <div class="form-group">
@@ -360,6 +369,10 @@
                     setStatus(`ยินดีต้อนรับ, ${data.user.name}`, "success");
                     document.getElementById('loginSection').style.display = 'none';
                     document.getElementById('adminContainer').style.display = 'flex';
+
+                    // Display User Profile
+                    document.getElementById('userName').innerText = data.user.name;
+                    document.getElementById('userPicture').src = data.user.picture;
 
                     // Pre-load config
                     document.getElementById('scriptUrl').value = url;

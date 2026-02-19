@@ -22,9 +22,17 @@ function doGet(e) {
 }
 
 function doPost(e) {
+  logToDebug("doPost triggered");
   try {
+    if (!e.postData || !e.postData.contents) {
+      logToDebug("No postData");
+      return errorResponse("No postData");
+    }
+    logToDebug("Payload: " + e.postData.contents);
+    
     const data = JSON.parse(e.postData.contents);
     const action = data.action;
+    logToDebug("Action: " + action);
 
     if (action === "setConfig") {
       return setConfig(data);
@@ -35,6 +43,7 @@ function doPost(e) {
       return handleCheckIn(data);
     }
   } catch (err) {
+    logToDebug("Error: " + err.toString());
     return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() }))
       .setMimeType(ContentService.MimeType.JSON);
   }
@@ -145,32 +154,44 @@ function errorResponse(msg) {
 }
 
 function verifyAdmin(data) {
+  logToDebug("verifyAdmin started");
   const adminSheet = getOrInitAdminSheet();
   const idToken = data.idToken;
   
-  if (!idToken) return errorResponse("Missing ID Token");
+  if (!idToken) {
+    logToDebug("Missing ID Token");
+    return errorResponse("Missing ID Token");
+  }
 
   try {
+    logToDebug("Verifying with LINE...");
+    
+    // Extract Channel ID from LIFF ID (Channel ID is the first part before '-')
+    const channelId = data.liffId.split('-')[0];
+    
     // Verify ID Token with LINE
-    // Need client_id (LIFF ID) to verify audience
     const payload = {
       id_token: idToken,
-      client_id: data.liffId
+      client_id: channelId
     };
 
     const options = {
       method: 'post',
-      payload: payload
+      payload: payload,
+      muteHttpExceptions: true // Added to see error response
     };
 
     const response = UrlFetchApp.fetch('https://api.line.me/oauth2/v2.1/verify', options);
+    const responseText = response.getContentText();
+    logToDebug("LINE Response: " + responseText);
     
-    const json = JSON.parse(response.getContentText());
+    const json = JSON.parse(responseText);
     if (json.error) return errorResponse(json.error_description);
 
     const userId = json.sub;
     const name = json.name;
     const picture = json.picture;
+    logToDebug("User Verified: " + name + " (" + userId + ")");
 
     // Check Whitelist
     const rows = adminSheet.getDataRange().getValues();
@@ -179,11 +200,8 @@ function verifyAdmin(data) {
 
     // Skip header (row 0)
     for (let i = 1; i < rows.length; i++) {
-        // userId is in col 0
       if (rows[i][0] === userId) {
         userFound = true;
-        // Authorized check in Col 2 (index 2)
-        // Check if value is boolean true or string "TRUE"
         const authVal = rows[i][2];
         isAuthorized = (authVal === true || String(authVal).toUpperCase() === 'TRUE');
         break;
@@ -191,8 +209,10 @@ function verifyAdmin(data) {
     }
 
     if (!userFound) {
-      // Auto-register as unauthorized
+      logToDebug("User not found, appending to sheet");
       adminSheet.appendRow([userId, name, false, new Date(), picture]);
+    } else {
+        logToDebug("User found, authorized: " + isAuthorized);
     }
 
     return ContentService.createTextOutput(JSON.stringify({ 
@@ -201,6 +221,7 @@ function verifyAdmin(data) {
     })).setMimeType(ContentService.MimeType.JSON);
 
   } catch (e) {
+    logToDebug("verifyAdmin Exception: " + e.toString());
     return errorResponse("Verification Failed: " + e.message);
   }
 }
@@ -213,4 +234,28 @@ function getOrInitAdminSheet() {
     sheet.appendRow(["LineUserID", "Name", "Authorized", "LastLogin", "Picture"]);
   }
   return sheet;
+}
+
+function getOrInitDebugSheet() {
+  const ss = getSpreadsheet();
+  let sheet = ss.getSheetByName("Debug");
+  if (!sheet) {
+    sheet = ss.insertSheet("Debug");
+    sheet.appendRow(["Timestamp", "Message"]);
+  }
+  return sheet;
+}
+
+
+function logToDebug(msg) {
+  try {
+    const sheet = getOrInitDebugSheet();
+    sheet.appendRow([new Date(), msg]);
+  } catch (e) {
+    // Fail silently if debug sheet fails
+  }
+}
+
+function testConnect() {
+   console.log(UrlFetchApp.fetch("https://google.com").getContentText());
 }
