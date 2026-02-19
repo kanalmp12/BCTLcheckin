@@ -56,21 +56,57 @@
             display: block;
         }
 
-        #status {
-            margin-top: 10px;
-            padding: 10px;
-            border-radius: 4px;
-            text-align: center;
+        #toast-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 90%;
+            max-width: 400px;
         }
 
-        .success {
-            background: #d4edda;
-            color: #155724;
+        .toast {
+            padding: 12px 16px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideIn 0.3s forwards;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
-        .error {
-            background: #f8d7da;
-            color: #721c24;
+        .toast.success {
+            background: #008a6a;
+        }
+
+        .toast.error {
+            background: #d32f2f;
+        }
+
+        .toast.fadeOut {
+            animation: fadeOut 0.3s forwards;
+        }
+
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                transform: scale(0.9);
+            }
         }
     </style>
 </head>
@@ -109,7 +145,7 @@
         <button onclick="saveConfig()" id="saveBtn">บันทึกการตั้งค่า</button>
     </div>
 
-    <div id="status"></div>
+    <div id="toast-container"></div>
 
     <script src="config.js"></script>
     <script>
@@ -121,9 +157,20 @@
         }
 
         function setStatus(msg, type) {
-            const el = document.getElementById('status');
-            el.textContent = msg;
-            el.className = type;
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerText = msg;
+
+            container.appendChild(toast);
+
+            // Auto remove
+            setTimeout(() => {
+                toast.classList.add('fadeOut');
+                toast.addEventListener('animationend', () => {
+                    toast.remove();
+                });
+            }, 3000);
         }
 
         async function loadConfig() {
@@ -131,7 +178,7 @@
             if (!url) return setStatus('กรุณาใส่ Google Script URL', 'error');
 
             localStorage.setItem('buca_script_url', url);
-            setStatus('กำลังโหลด...', '');
+            setStatus('กำลังโหลด...', 'success'); // Verify if 'success' color is ok for loading or add 'info'
 
             try {
                 // Determine connector char
@@ -161,7 +208,7 @@
             const url = document.getElementById('scriptUrl').value.trim();
             const saveBtn = document.getElementById('saveBtn');
             saveBtn.disabled = true;
-            setStatus('กำลังบันทึก...', '');
+            setStatus('กำลังบันทึก...', 'success');
 
             const payload = {
                 action: 'setConfig',
@@ -172,10 +219,6 @@
             };
 
             try {
-                // Using no-cors might prevent reading response, but let's try standard POST first
-                // If standard POST fails due to CORS, we might need a different approach or rely on GET for simple updates (less secure but works for GAS sometimes if JSONP)
-                // Actually, text/plain POST usually works with GAS `doPost`.
-
                 const res = await fetch(url, {
                     method: 'POST',
                     mode: 'no-cors', // standard for GAS web apps usually
@@ -184,7 +227,7 @@
                 });
 
                 // Since mode is no-cors, we can't read response. We assume success if no network error.
-                setStatus('บันทึกคำสั่งส่งไปแล้ว (ตรวจสอบที่หน้าเช็คชื่อ) ✅', 'success');
+                setStatus('บันทึกคำสั่งเรียบร้อยแล้ว ✅', 'success');
             } catch (err) {
                 setStatus('บันทึกไม่สำเร็จ: ' + err.message, 'error');
             } finally {
