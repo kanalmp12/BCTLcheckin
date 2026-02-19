@@ -28,6 +28,8 @@ function doPost(e) {
 
     if (action === "setConfig") {
       return setConfig(data);
+    } else if (action === "verifyAdmin") {
+      return verifyAdmin(data);
     } else {
       // Default: Check-in logic
       return handleCheckIn(data);
@@ -140,4 +142,75 @@ function getSpreadsheet() {
 function errorResponse(msg) {
   return ContentService.createTextOutput(JSON.stringify({ status: "error", message: msg }))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+function verifyAdmin(data) {
+  const adminSheet = getOrInitAdminSheet();
+  const idToken = data.idToken;
+  
+  if (!idToken) return errorResponse("Missing ID Token");
+
+  try {
+    // Verify ID Token with LINE
+    // Need client_id (LIFF ID) to verify audience
+    const payload = {
+      id_token: idToken,
+      client_id: data.liffId
+    };
+
+    const options = {
+      method: 'post',
+      payload: payload
+    };
+
+    const response = UrlFetchApp.fetch('https://api.line.me/oauth2/v2.1/verify', options);
+    
+    const json = JSON.parse(response.getContentText());
+    if (json.error) return errorResponse(json.error_description);
+
+    const userId = json.sub;
+    const name = json.name;
+    const picture = json.picture;
+
+    // Check Whitelist
+    const rows = adminSheet.getDataRange().getValues();
+    let isAuthorized = false;
+    let userFound = false;
+
+    // Skip header (row 0)
+    for (let i = 1; i < rows.length; i++) {
+        // userId is in col 0
+      if (rows[i][0] === userId) {
+        userFound = true;
+        // Authorized check in Col 2 (index 2)
+        // Check if value is boolean true or string "TRUE"
+        const authVal = rows[i][2];
+        isAuthorized = (authVal === true || String(authVal).toUpperCase() === 'TRUE');
+        break;
+      }
+    }
+
+    if (!userFound) {
+      // Auto-register as unauthorized
+      adminSheet.appendRow([userId, name, false, new Date(), picture]);
+    }
+
+    return ContentService.createTextOutput(JSON.stringify({ 
+      authorized: isAuthorized,
+      user: { name: name, picture: picture }
+    })).setMimeType(ContentService.MimeType.JSON);
+
+  } catch (e) {
+    return errorResponse("Verification Failed: " + e.message);
+  }
+}
+
+function getOrInitAdminSheet() {
+  const ss = getSpreadsheet();
+  let sheet = ss.getSheetByName("Admins");
+  if (!sheet) {
+    sheet = ss.insertSheet("Admins");
+    sheet.appendRow(["LineUserID", "Name", "Authorized", "LastLogin", "Picture"]);
+  }
+  return sheet;
 }

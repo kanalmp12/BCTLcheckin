@@ -244,7 +244,18 @@
 </head>
 
 <body>
-    <div class="container">
+    <div id="loginSection" class="container" style="display: none; text-align: center; margin-top: 100px;">
+        <div class="card">
+            <h2>🔐 Admin Access Required</h2>
+            <p>กรุณาเข้าสู่ระบบด้วย LINE เพื่อยืนยันสิทธิ์</p>
+            <button onclick="liff.login()" style="background-color: #06C755; color: white;">
+                Log in with LINE
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Admin Container (Hidden by default) -->
+    <div class="container" id="adminContainer" style="display: none;">
         <h1><span class="icon">settings</span> ตั้งค่าระบบเช็คชื่อ</h1>
 
         <div class="card">
@@ -300,14 +311,74 @@
 
     <div id="toast-container"></div>
 
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="config.js"></script>
     <script>
-        // Try to load saved URL from config.js first, then local storage
-        if (typeof GOOGLE_SCRIPT_URL !== 'undefined' && GOOGLE_SCRIPT_URL) {
-            document.getElementById('scriptUrl').value = GOOGLE_SCRIPT_URL;
-        } else {
-            document.getElementById('scriptUrl').value = localStorage.getItem('buca_script_url') || '';
+        // Check for LIFF ID
+        if (typeof LIFF_ID === 'undefined' || !LIFF_ID || LIFF_ID === "YOUR_LIFF_ID_HERE") {
+            alert("กรุณาตั้งค่า LIFF_ID ในไฟล์ config.js ก่อนใช้งาน");
         }
+
+        async function initLiff() {
+            try {
+                await liff.init({ liffId: LIFF_ID });
+                if (!liff.isLoggedIn()) {
+                    document.getElementById('loginSection').style.display = 'block';
+                } else {
+                    handleLoggedIn();
+                }
+            } catch (err) {
+                console.error("LIFF Init Error", err);
+                setStatus("LIFF Error: " + err.message, "error");
+            }
+        }
+
+        async function handleLoggedIn() {
+            setStatus("กำลังตรวจสอบสิทธิ์...", "success"); // Blue toast
+            const idToken = liff.getIDToken();
+            const url = GOOGLE_SCRIPT_URL || localStorage.getItem('buca_script_url');
+
+            try {
+                const connector = url.includes('?') ? '&' : '?';
+                const payload = {
+                    action: 'verifyAdmin',
+                    idToken: idToken,
+                    liffId: LIFF_ID
+                };
+
+                const res = await fetch(url, {
+                    method: 'POST',
+                    mode: 'text/plain', // Use text/plain to avoid CORS preflight issues with GAS
+                    body: JSON.stringify(payload)
+                });
+
+                // GAS usually returns JSON string
+                const txt = await res.text();
+                const data = JSON.parse(txt);
+
+                if (data.authorized) {
+                    setStatus(`ยินดีต้อนรับ, ${data.user.name}`, "success");
+                    document.getElementById('loginSection').style.display = 'none';
+                    document.getElementById('adminContainer').style.display = 'flex';
+
+                    // Pre-load config
+                    document.getElementById('scriptUrl').value = url;
+                    loadConfig();
+                } else {
+                    setStatus("คุณไม่มีสิทธิ์เข้าถึง (Unauthorized)", "error");
+                    setTimeout(() => {
+                        window.location.href = "Maintenance.html";
+                    }, 2000);
+                }
+
+            } catch (err) {
+                console.error("Auth Error", err);
+                setStatus("Auth Error: " + err.message, "error");
+            }
+        }
+
+        // Initialize LIFF on load
+        window.onload = initLiff;
 
         function setStatus(msg, type) {
             const container = document.getElementById('toast-container');
@@ -376,7 +447,7 @@
             try {
                 const res = await fetch(url, {
                     method: 'POST',
-                    mode: 'no-cors',
+                    mode: 'no-cors', // standard for GAS web apps usually
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
