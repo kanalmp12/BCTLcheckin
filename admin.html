@@ -357,6 +357,23 @@
             </div>
 
             <div class="form-group">
+                <label for="presetSelect">พรีเซ็ตพิกัด (Location Presets)</label>
+                <div style="display: flex; gap: 8px;">
+                    <select id="presetSelect" onchange="applyPreset()" style="flex: 1;">
+                        <option value="">-- เลือกพรีเซ็ต --</option>
+                    </select>
+                    <button type="button" onclick="saveAsPreset()" title="Save as Preset"
+                        style="width: auto; padding: 0 16px; margin: 0; border-radius: 4px; background-color: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary);">
+                        <span class="material-symbols-outlined" style="font-size: 20px;">bookmark_add</span>
+                    </button>
+                    <button type="button" onclick="deletePreset()" title="Delete Preset"
+                        style="width: auto; padding: 0 16px; margin: 0; border-radius: 4px; background-color: var(--md-sys-color-error); color: var(--md-sys-color-on-error);">
+                        <span class="material-symbols-outlined" style="font-size: 20px;">delete</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-group">
                 <label for="lat">Latitude (ละติจูด)</label>
                 <input type="number" id="lat" step="any" placeholder="13.XXXXXX">
             </div>
@@ -502,6 +519,10 @@
                 document.getElementById('radius').value = data.radius || 50;
                 document.getElementById('openStatus').value = data.isOpen ? "true" : "false";
 
+                // Handle Presets via backend
+                locationPresets = data.presets || [];
+                updatePresetDropdown();
+
                 // Enable form
                 const section = document.getElementById('configSection');
                 section.style.opacity = '1';
@@ -612,6 +633,116 @@
                 setStatus('Failed to read clipboard: ' + err.message, 'error');
             }
         }
+
+        let locationPresets = [];
+
+        function updatePresetDropdown() {
+            const select = document.getElementById('presetSelect');
+            select.innerHTML = '<option value="">-- เลือกพรีเซ็ต --</option>';
+            locationPresets.forEach((p, index) => {
+                const opt = document.createElement('option');
+                opt.value = index;
+                opt.text = p.name;
+                select.appendChild(opt);
+            });
+        }
+
+        function applyPreset() {
+            const index = document.getElementById('presetSelect').value;
+            if (index === "") return;
+            const p = locationPresets[index];
+            if (p) {
+                document.getElementById('lat').value = p.lat;
+                document.getElementById('lng').value = p.lng;
+                if (p.radius) document.getElementById('radius').value = p.radius;
+                setStatus(`Applied preset: ${p.name}`, 'success');
+            }
+        }
+
+        async function saveAsPreset() {
+            const url = document.getElementById('scriptUrl').value.trim();
+            if (!url) {
+                setStatus('Google Script URL is missing', 'error');
+                return;
+            }
+
+            const lat = document.getElementById('lat').value;
+            const lng = document.getElementById('lng').value;
+            const radius = document.getElementById('radius').value;
+            if (!lat || !lng) {
+                setStatus('Please enter both Latitude and Longitude', 'error');
+                return;
+            }
+            const name = prompt('Enter a name for this preset:');
+            if (!name) return;
+
+            setStatus('Saving preset...', 'success');
+            const payload = { action: 'savePreset', name, lat, lng, radius };
+
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(payload)
+                });
+                const data = JSON.parse(await res.text());
+
+                if (data.status === 'success') {
+                    locationPresets.push({ name, lat, lng, radius });
+                    updatePresetDropdown();
+                    document.getElementById('presetSelect').value = locationPresets.length - 1;
+                    setStatus(`Saved preset: ${name}`, 'success');
+                } else {
+                    setStatus(data.message || 'Error saving preset', 'error');
+                }
+            } catch (err) {
+                setStatus('Failed to save preset', 'error');
+            }
+        }
+
+        async function deletePreset() {
+            const url = document.getElementById('scriptUrl').value.trim();
+            if (!url) {
+                setStatus('Google Script URL is missing', 'error');
+                return;
+            }
+
+            const select = document.getElementById('presetSelect');
+            const index = select.value;
+            if (index === "") {
+                setStatus('Please select a preset to delete', 'error');
+                return;
+            }
+            const name = locationPresets[index].name;
+            if (!confirm(`Are you sure you want to delete preset "${name}"?`)) return;
+
+            setStatus('Deleting preset...', 'success');
+            const payload = { action: 'deletePreset', name };
+
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(payload)
+                });
+                const data = JSON.parse(await res.text());
+
+                if (data.status === 'success') {
+                    locationPresets.splice(index, 1);
+                    updatePresetDropdown();
+                    document.getElementById('lat').value = '';
+                    document.getElementById('lng').value = '';
+                    document.getElementById('radius').value = '50';
+                    setStatus(`Deleted preset: ${name}`, 'success');
+                } else {
+                    setStatus(data.message || 'Error deleting preset', 'error');
+                }
+            } catch (err) {
+                setStatus('Failed to delete preset', 'error');
+            }
+        }
+
+        updatePresetDropdown();
     </script>
 </body>
 

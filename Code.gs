@@ -30,6 +30,10 @@ function doPost(e) {
       return setConfig(data);
     } else if (action === "verifyAdmin") {
       return verifyAdmin(data);
+    } else if (action === "savePreset") {
+      return savePreset(data);
+    } else if (action === "deletePreset") {
+      return deletePreset(data);
     } else {
       // Default: Check-in logic
       return handleCheckIn(data);
@@ -65,6 +69,22 @@ function getConfig() {
     const val = data[i][1];
     config[key] = val;
   }
+
+  // Load Presets
+  let presetsSheet = ss.getSheetByName("Presets");
+  let presets = [];
+  if (presetsSheet) {
+    const pData = presetsSheet.getDataRange().getValues();
+    for (let i = 1; i < pData.length; i++) {
+        presets.push({
+           name: pData[i][0],
+           lat: pData[i][1],
+           lng: pData[i][2],
+           radius: pData[i][3]
+        });
+    }
+  }
+  config.presets = presets;
 
   return ContentService.createTextOutput(JSON.stringify(config))
     .setMimeType(ContentService.MimeType.JSON);
@@ -213,5 +233,76 @@ function getOrInitAdminSheet() {
   }
   return sheet;
 }
+
+// --- Preset Functions ---
+
+function getOrInitPresetsSheet() {
+  const ss = getSpreadsheet();
+  let sheet = ss.getSheetByName("Presets");
+  if (!sheet) {
+    sheet = ss.insertSheet("Presets");
+    sheet.appendRow(["Name", "Lat", "Lng", "Radius"]);
+  }
+  return sheet;
+}
+
+function savePreset(data) {
+  const sheet = getOrInitPresetsSheet();
+  const name = data.name;
+  const lat = data.lat;
+  const lng = data.lng;
+  const radius = data.radius || 50;
+  
+  if (!name) return errorResponse("Preset name is required");
+
+  // Check if preset exists and update, or append
+  const range = sheet.getDataRange();
+  const values = range.getValues();
+  let found = false;
+  
+  for (let i = 1; i < values.length; i++) {
+    if (values[i][0] === name) {
+      sheet.getRange(i+1, 2).setValue(lat);
+      sheet.getRange(i+1, 3).setValue(lng);
+      sheet.getRange(i+1, 4).setValue(radius);
+      found = true;
+      break;
+    }
+  }
+  
+  if (!found) {
+    sheet.appendRow([name, lat, lng, radius]);
+  }
+
+  return ContentService.createTextOutput(JSON.stringify({ status: "success", message: "Preset saved" }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function deletePreset(data) {
+  const sheet = getOrInitPresetsSheet();
+  const name = data.name;
+
+  if (!name) return errorResponse("Preset name is required");
+  
+  const range = sheet.getDataRange();
+  const values = range.getValues();
+  let deleted = false;
+  
+  for (let i = 1; i < values.length; i++) {
+    if (values[i][0] === name) {
+      sheet.deleteRow(i+1);
+      deleted = true;
+      break;
+    }
+  }
+  
+  if (deleted) {
+    return ContentService.createTextOutput(JSON.stringify({ status: "success", message: "Preset deleted" }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } else {
+    return errorResponse("Preset not found");
+  }
+}
+
 
 
